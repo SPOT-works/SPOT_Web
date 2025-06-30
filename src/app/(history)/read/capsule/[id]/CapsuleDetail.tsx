@@ -10,23 +10,41 @@ import {
 } from "@/components/icons";
 import OpenAnimation from "@/app/(history)/read/capsule/[id]/OpenAnimation";
 import { useOpenCapsule } from "@/hooks";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useParams } from "next/navigation";
+import { useHistoryQuery } from "@/services/message/query";
+import { useReadHistoryMutation } from "@/services/message/mutation";
 
 export default function CapsuleDetail() {
   const { dragY, opened, handleTouchStart, handleTouchMove, handleTouchEnd } =
     useOpenCapsule();
   const [isMounted, setIsMounted] = useState(false);
+  const params = useParams<{ id: string }>();
+  const { data: message } = useHistoryQuery(params.id);
+  const { mutate: readHistory } = useReadHistoryMutation();
+
+  useEffect(() => {
+    if (message) {
+      readHistory(message.id);
+    }
+  }, [message, readHistory]);
+
+  if (!message) return null;
 
   return (
     <div className="h-screen w-full overflow-hidden">
       <Cameraview isMounted={isMounted} />
-      <div className="px-6 py-3">
+      <div className="relative z-50 px-6 py-3">
         <CloseTab />
       </div>
 
       <div className="absolute left-1/2 top-1/2 z-50 flex w-full -translate-x-1/2 -translate-y-1/2 flex-col items-center">
         {opened ? (
-          <OpenAnimation isMounted={isMounted} setIsMounted={setIsMounted} />
+          <OpenAnimation
+            isMounted={isMounted}
+            setIsMounted={setIsMounted}
+            message={message}
+          />
         ) : (
           <div className="flex flex-col items-center gap-5">
             <div className="flex flex-col items-center">
